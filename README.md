@@ -1,3 +1,3 @@
 Setup ELIXIR using ASDF
 
-and un prefixing the file with elixir
+then run by prefixing the file with elixir in terminal

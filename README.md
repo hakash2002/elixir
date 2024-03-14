@@ -1,7 +1,9 @@
 ##Setup asdf
+
 '''
 https://asdf-vm.com/guide/getting-started.html
 '''
+
 ##Setup elixir using asdf
 '''
 https://github.com/asdf-vm/asdf-elixir

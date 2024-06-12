@@ -1,10 +1,10 @@
 defmodule Files do
   def link() do
-    pid = spawn(fn -> Files.fileoperation() end)
+    pid = spawn(fn -> Files.fileops() end)
     pid
   end
 
-  def fileoperation() do
+  def fileops() do
     receive do
       {:read, pid} ->
         val = File.read("hello.txt")

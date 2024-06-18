@@ -1,5 +1,4 @@
 x = true
-
 y =
   cond do
     is_atom(x) ->

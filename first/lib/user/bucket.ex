@@ -1,10 +1,6 @@
 defmodule User.Bucket do
   use Agent
 
-  def start_link(_opts) do
-    Agent.start_link(fn -> %{} end)
-  end
-
   def get(bucket, uname) do
     Agent.get(bucket, fn bucket -> Map.get(bucket, uname) end)
   end

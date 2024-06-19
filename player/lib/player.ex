@@ -1,4 +1,4 @@
-defmodule KV do
+defmodule Player do
   use Application
 
   @impl true

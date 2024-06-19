@@ -49,7 +49,7 @@ defmodule Player.Api do
   @impl true
   def handle_info(msg, state) do
     require Logger
-    Logger.debug("Unexpected message in KV.Registry: #{inspect(msg)}")
+    Logger.debug("Unexpected message in Player.Api: #{inspect(msg)}")
     {:noreply, state}
   end
 

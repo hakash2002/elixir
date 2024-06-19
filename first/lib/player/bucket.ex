@@ -13,7 +13,7 @@ defmodule Player.Bucket do
     Agent.update(state, fn map -> Map.put(map,pname,value) end)
   end
 
-  def delete(bucket, pname) do
-    Agent.get_and_update(bucket, fn bucket -> Map.delete(bucket, pname) end)
+  def delete(state, pname) do
+    Agent.get_and_update(state, fn state -> Map.delete(state, pname) end)
   end
 end

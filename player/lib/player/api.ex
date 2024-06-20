@@ -31,13 +31,14 @@ defmodule Player.Api do
       Player.Bucket.put(names[position], pname, value)
       {:noreply, {names, refs}}
     else
-      {:ok, bucket} = Player.Bucket.start_link(%{pname => value})
-      ref = Process.monitor(bucket)
+      {:ok, pid} = DynamicSupervisor.start_child(Player.BucketSupervisor, {Player.Bucket, %{pname => value}})
+      ref = Process.monitor(pid)
       refs = Map.put(refs, ref, position)
-      names = Map.put(names, position, bucket)
+      names = Map.put(names, position, pid)
       {:noreply, {names, refs}}
     end
   end
+
 
   @impl true
   def handle_info({:DOWN, ref, :process, _pid, _reason}, {names, refs}) do
@@ -54,7 +55,7 @@ defmodule Player.Api do
   end
 
   # Client side
-  def start_link(opts) do
+  def start_link(opts \\ %{}) do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
 

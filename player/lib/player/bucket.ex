@@ -1,5 +1,5 @@
 defmodule Player.Bucket do
-  use Agent
+  use Agent, restart: :temporary
 
   def start_link(opts) do
     Agent.start_link(fn -> opts end)

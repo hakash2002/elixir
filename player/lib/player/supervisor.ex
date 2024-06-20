@@ -5,14 +5,12 @@ defmodule Player.Supervisor do
     Supervisor.start_link(__MODULE__, :ok, opts)
   end
 
-  @impl true
   def init(:ok) do
     children = [
       {Player.Api, name: Player.Api},
       {DynamicSupervisor, name: Player.BucketSupervisor, strategy: :one_for_one}
 
     ]
-
-    Supervisor.init(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_all)
   end
 end

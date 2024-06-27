@@ -10,7 +10,19 @@ defmodule PlayerUmbrella.MixProject do
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
-      lockfile: "../../mix.lock"
+      lockfile: "../../mix.lock",
+      releases: [
+        foo: [
+          version: "0.0.1",
+          applications: [player_server: :permanent, player: :permanent],
+          cookie: "weknoweachother"
+        ],
+        bar: [
+          version: "0.0.1",
+          applications: [player: :permanent],
+          cookie: "weknoweachother"
+        ]
+      ]
     ]
   end
 

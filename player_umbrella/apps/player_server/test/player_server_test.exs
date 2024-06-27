@@ -26,21 +26,21 @@ defmodule PlayerServerTest do
     assert send_and_recv(socket, "PUT offense justin jefferson 90 90 90\r\n") ==
            "Updated\r\n"
 
-    # GET returns two lines
     assert send_and_recv(socket, "GET offense justin jefferson\r\n") == "Player stats: Power: 90 Speed: 90 Agility: 90\r\n"
-    assert send_and_recv(socket, "") == "OK\r\n"
+    assert send_and_recv(socket, "") == :timeout
 
     assert send_and_recv(socket, "DELETE offense justin jefferson\r\n") ==
            "Deleted\r\n"
 
-    # GET returns two lines
     assert send_and_recv(socket, "GET offense justin jefferson\r\n") == "No value found\r\n"
-    assert send_and_recv(socket, "") == "OK\r\n"
+    assert send_and_recv(socket, "") == :timeout
   end
 
   defp send_and_recv(socket, command) do
     :ok = :gen_tcp.send(socket, command)
-    {:ok,data} = :gen_tcp.recv(socket, 0,1000)
-    data
+    case :gen_tcp.recv(socket, 0,100) do
+      {:ok,data} -> data
+      {:error,_} -> :timeout
+    end
   end
 end

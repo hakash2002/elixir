@@ -9,7 +9,7 @@ defmodule PlayerServer.Application do
     port = String.to_integer(System.get_env("PORT") || "4040")
       children = [
         {Task.Supervisor, name: PlayerServer.TaskSupervisor},
-        Supervisor.child_spec({Task, fn -> PlayerServer.accept(port) end}, restart: :permanent)
+        Supervisor.child_spec({Task, fn -> PlayerServer.accept(port) end}, restart: :permanent),
       ]
 
     opts = [strategy: :one_for_one, name: PlayerServer.Supervisor]

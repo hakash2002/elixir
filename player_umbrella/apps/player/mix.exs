@@ -15,7 +15,8 @@ defmodule Player.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Player, %{}}
+      env: [routing_table: []],
+      mod: {Player, []}
     ]
   end
   # Run "mix help deps" to learn about dependencies.

@@ -5,8 +5,10 @@ defmodule PlayerServer.Command do
   end
 
   def run({:create, bucket}) do
-    Player.Api.create(Player.Api, bucket)
-    {:ok, "OK\r\n"}
+    case Player.Router.route(bucket, Player.Api, :create, [Player.Api, bucket]) do
+      pid when is_pid(pid) -> {:ok, "OK\r\n"}
+      _ -> {:error, "FAILED TO CREATE BUCKET"}
+    end
   end
 
   def run({:get, bucket, key}) do
@@ -45,7 +47,7 @@ defmodule PlayerServer.Command do
   end
 
   defp lookup(bucket, callback) do
-    case Player.Api.get(Player.Api, bucket) do
+    case Player.Router.route(bucket, Player.Api, :get, [Player.Api, bucket]) do
       {:ok, pid} -> callback.(pid)
       :error -> {:error, :not_found}
     end

@@ -2,9 +2,9 @@ defmodule PlayerServer do
   require Logger
 
   def accept(port) do
-
     {:ok, socket} =
       :gen_tcp.listen(port, [:binary, packet: :line, active: false, reuseaddr: true])
+
     Logger.info("Accepting connections on port #{port}")
     loop_acceptor(socket)
   end
@@ -27,7 +27,7 @@ defmodule PlayerServer do
   end
 
   defp read_line(socket) do
-    :gen_tcp.recv(socket, 0)
+      :gen_tcp.recv(socket, 0)
   end
 
   defp write_line(socket, {:ok, text}) do
@@ -45,5 +45,4 @@ defmodule PlayerServer do
   defp write_line(socket, {:error, :not_found}) do
     :gen_tcp.send(socket, "NOT FOUND\r\n")
   end
-
 end

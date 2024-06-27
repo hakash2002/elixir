@@ -8,7 +8,9 @@ defmodule Player.Supervisor do
   def init(:ok) do
     children = [
       {Player.Api, name: Player.Api},
-      {DynamicSupervisor, name: Player.BucketSupervisor, strategy: :one_for_one}
+      {DynamicSupervisor, name: Player.BucketSupervisor, strategy: :one_for_one},
+      {Task.Supervisor, name: Player.RouterTasks}
+
 
     ]
     Supervisor.init(children, strategy: :one_for_all)

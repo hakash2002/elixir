@@ -55,27 +55,6 @@ defmodule Player.Api do
   end
 
   @impl true
-  def handle_call({:create, position, pname, value}, _from, {names, refs}) do
-    case get(names, position) do
-      {:ok, pid} ->
-        Player.Bucket.put(pid, pname, value)
-        {:reply, pid, {names, refs}}
-
-      :error ->
-        {:ok, pid} =
-          DynamicSupervisor.start_child(
-            Player.BucketSupervisor,
-            {Player.Bucket, %{pname => value}}
-          )
-
-        ref = Process.monitor(pid)
-        refs = Map.put(refs, ref, position)
-        :ets.insert(names, {position, pid})
-        {:reply, pid, {names, refs}}
-    end
-  end
-
-  @impl true
   def handle_call({:create, position}, _from, {names, refs}) do
     case get(names, position) do
       {:ok, pid} ->
@@ -133,7 +112,6 @@ defmodule Player.Api do
 
   @impl true
   def handle_info({:DOWN, ref, :process, _pid, _reason}, {names, refs}) do
-    # 6. Delete from the ETS table instead of the map
     {name, refs} = Map.pop(refs, ref)
     :ets.delete(names, name)
     {:noreply, {names, refs}}

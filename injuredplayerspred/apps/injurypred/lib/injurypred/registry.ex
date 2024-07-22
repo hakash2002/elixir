@@ -104,7 +104,7 @@ defmodule Injurypred.Registry do
   def findwinner(server) do
     {:ok, pid} = get(server, "scores")
     map = Buck.get(pid)
-    val = Enum.reduce(map, {[], nil}, fn {key, value}, {keys, max_value} ->
+    Enum.reduce(map, {[], nil}, fn {key, value}, {keys, max_value} ->
       cond do
         max_value == nil ->
           {[key], value}

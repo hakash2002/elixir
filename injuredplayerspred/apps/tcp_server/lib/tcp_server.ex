@@ -54,10 +54,17 @@ defmodule TcpServer do
     endgame(socket)
     {val, maxscore} = Injurypred.Registry.findwinner(Injurypred.Registry)
     winner = Enum.reduce(val, "", fn val, acc -> " " <> acc <> val end)
+
     if length(val) > 1 do
-    write_client(socket, {:ok, "The winners are#{winner} with score of #{to_string(maxscore)}\r\n"})
+      write_client(
+        socket,
+        {:ok, "The winners are#{winner} with score of #{to_string(maxscore)}\r\n"}
+      )
     else
-      write_client(socket, {:ok, "The winner is#{winner} with a score of #{to_string(maxscore)}\r\n"})
+      write_client(
+        socket,
+        {:ok, "The winner is#{winner} with a score of #{to_string(maxscore)}\r\n"}
+      )
     end
   end
 
@@ -90,7 +97,6 @@ defmodule TcpServer do
   end
 
   defp selectingplayers() do
-    Main.run("apps/model/lib/injury.csv", "apps/model/lib/predictions.csv")
     data = Playersparser.select_random_value("apps/model/lib/predictions.csv")
 
     {Enum.reduce(data, "", fn %{s_no: a, player_key: _, player_name: b, ruled_out: _}, acc ->
@@ -115,7 +121,14 @@ defmodule TcpServer do
         |> String.split(",")
         |> Enum.map(&String.to_integer/1)
 
-      score = Playersparser.predict_score(datas, data)
+      dat =
+        if length(data) > 5 do
+          Enum.slice(data, 0, 5)
+        else
+          data
+        end
+
+      score = Playersparser.predict_score(datas, dat)
 
       case Injurypred.Registry.getscores(Injurypred.Registry, uname) do
         :error ->
@@ -126,7 +139,11 @@ defmodule TcpServer do
       end
 
       {:ok, updated_score} = Injurypred.Registry.getscores(Injurypred.Registry, uname)
+      {:ok, pid} = Injurypred.Registry.get(Injurypred.Registry, "scores")
+      IO.inspect(Injurypred.Bucket.get(pid))
       write_client(socket, {:ok, "Your cummulative score is: #{to_string(updated_score)}\r\n"})
+      write_client(socket, {:ok, "\r\n"})
+
       loopgame(count, uname, socket)
     end
   end

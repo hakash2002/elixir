@@ -35,7 +35,6 @@ defmodule Playersparser do
 
   def predict_score(data, picks) do
     k = length(Enum.filter(data, fn %{player_key: _, player_name: _, ruled_out: a,s_no: s_no} -> s_no in picks and a == "Yes"  end))
-    m = [1,1,2,3,5]
-    Enum.at(m, k - 1) * 10
+    k * 10
   end
 end

@@ -5,7 +5,7 @@ defmodule TcpServer do
     {:ok, socket} =
       :gen_tcp.listen(port, [:binary, packet: :line, active: false, reuseaddr: true])
 
-    Logger.info("Server connection started, accepting connections on #{port}")
+    Logger.info("Server connection started, accepting on #{port}")
     loop_accept(socket)
   end
 
@@ -97,7 +97,7 @@ defmodule TcpServer do
   end
 
   defp selectingplayers() do
-    data = Playersparser.select_random_value("apps/model/lib/predictions.csv")
+    data = Injury.Playersparser.select_random_value("apps/injuryprediction/lib/injury/predictions.csv")
 
     {Enum.reduce(data, "", fn %{s_no: a, player_key: _, player_name: b, ruled_out: _}, acc ->
        acc <> "#{to_string(a)}, #{b} \n "
@@ -108,7 +108,9 @@ defmodule TcpServer do
     round_no = Agent.get_and_update(count, fn count -> {count, count + 1} end)
 
     if round_no != 4 do
+      write_client(socket, {:ok, "-------------------- \r\n"})
       write_client(socket, {:ok, "Round no: #{to_string(round_no)} \r\n"})
+      write_client(socket, {:ok, "-------------------- \r\n"})
       write_client(socket, {:ok, "The players are: \r\n"})
       write_client(socket, {:ok, "S.No, Player name\r\n"})
       {tobewritten, datas} = selectingplayers()
@@ -120,6 +122,8 @@ defmodule TcpServer do
         |> String.trim()
         |> String.split(",")
         |> Enum.map(&String.to_integer/1)
+        |> Enum.filter(fn s -> s < 11 end)
+        |> Enum.uniq()
 
       dat =
         if length(data) > 5 do
@@ -128,7 +132,7 @@ defmodule TcpServer do
           data
         end
 
-      score = Playersparser.predict_score(datas, dat)
+      score = Injury.Playersparser.predict_score(datas, dat)
 
       case Injurypred.Registry.getscores(Injurypred.Registry, uname) do
         :error ->
@@ -139,8 +143,6 @@ defmodule TcpServer do
       end
 
       {:ok, updated_score} = Injurypred.Registry.getscores(Injurypred.Registry, uname)
-      {:ok, pid} = Injurypred.Registry.get(Injurypred.Registry, "scores")
-      IO.inspect(Injurypred.Bucket.get(pid))
       write_client(socket, {:ok, "Your cummulative score is: #{to_string(updated_score)}\r\n"})
       write_client(socket, {:ok, "\r\n"})
 

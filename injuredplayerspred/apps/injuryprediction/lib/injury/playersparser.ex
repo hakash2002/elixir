@@ -1,4 +1,4 @@
-defmodule Playersparser do
+defmodule Injury.Playersparser do
   def load_data(file_path) do
     file_path
     |> File.read!()
@@ -34,7 +34,13 @@ defmodule Playersparser do
   end
 
   def predict_score(data, picks) do
-    k = length(Enum.filter(data, fn %{player_key: _, player_name: _, ruled_out: a,s_no: s_no} -> s_no in picks and a == "Yes"  end))
+    k =
+      length(
+        Enum.filter(data, fn %{player_key: _, player_name: _, ruled_out: a, s_no: s_no} ->
+          s_no in picks and a == "Yes"
+        end)
+      )
+
     k * 10
   end
 end

@@ -1,15 +1,11 @@
-defmodule TcpServer.MixProject do
+defmodule Injuryprediction.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :tcp_server,
+      app: :injuryprediction,
       version: "0.1.0",
-      build_path: "../../_build",
-      config_path: "../../config/config.exs",
-      deps_path: "../../deps",
-      lockfile: "../../mix.lock",
-      elixir: "~> 1.17",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -19,15 +15,15 @@ defmodule TcpServer.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {TcpServer.Application, []}
+      mod: {Injury.Application,[]}
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:injurypred, in_umbrella: true},
-      {:injuryprediction, in_umbrella: true},
+      # {:dep_from_hexpm, "~> 0.3.0"},
+      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
   end
 end

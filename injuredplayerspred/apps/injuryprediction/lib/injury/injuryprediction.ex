@@ -1,7 +1,9 @@
-defmodule Server do
+defmodule Injury.Injuryprediction do
+
   require Logger
 
   def accept(port) do
+
     {:ok, socket} =
       :gen_tcp.listen(port, [:binary, packet: :line, active: false, reuseaddr: true])
 
@@ -24,12 +26,14 @@ defmodule Server do
   end
 
   defp read_line(socket) do
+    :gen_tcp.send(socket,"The file you want to read and write the prediction\n")
     {:ok, data} = :gen_tcp.recv(socket, 0)
-    a = Main.run(("lib/" <> data) |> String.trim(), "lib/predictions.csv")
+    a=Injury.Main.run("apps/injuryprediction/lib/injury/" <> data |> String.trim(), "apps/injuryprediction/lib/injury/predictions.csv")
     a
   end
 
   defp write_line(line, socket) do
     :gen_tcp.send(socket, line)
   end
+
 end

@@ -110,7 +110,7 @@ defmodule TcpServer do
       write_client(socket, {:ok, "Your 30 second timer for the game starts now\r\n "})
 
       data =
-        to_string(read_client(socket, 84000))
+        to_string(read_client(socket, 34000))
         |> String.trim()
         |> String.split(",")
         |> Enum.map(&String.to_integer/1)

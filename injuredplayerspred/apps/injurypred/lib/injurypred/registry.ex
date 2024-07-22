@@ -56,7 +56,7 @@ defmodule Injurypred.Registry do
         Buck.getscores(pid, name)
 
       :error ->
-        "User details not exists"
+        :error
     end
   end
 
@@ -66,12 +66,70 @@ defmodule Injurypred.Registry do
   def putscores(server, name, score) do
     case get(server, "scores") do
       {:ok, pid} ->
-        Buck.put(pid,score)
+        Buck.putscore(pid, name, score)
 
-      [] ->
-        create(server, name)
+      :error ->
+        create(server, "scores")
         {:ok, pid} = get(server, "scores")
-        Buck.put(pid,score)
+        Buck.putscore(pid, name, score)
+    end
+  end
+
+  def gameflow(server) do
+    case get(server, "gameflow") do
+      {:ok, pid} ->
+        pid
+
+      :error ->
+        create(server, "gameflow")
+        {:ok, pid} = get(server, "gameflow")
+        Buck.putscore(pid, "usersonline", [])
+        Buck.putscore(pid, "usersfinished", [])
+        pid
+    end
+  end
+
+  def finishedgame(server, name) do
+    {:ok, pid} = get(server, "gameflow")
+
+    case Buck.getfinishedgame(pid, name) do
+      true ->
+        Buck.updatefinishedgame(pid, "usersfinished", name)
+
+      false ->
+        :error
+    end
+  end
+
+  def findwinner(server) do
+    {:ok, pid} = get(server, "scores")
+    map = Buck.get(pid)
+    val = Enum.reduce(map, {[], nil}, fn {key, value}, {keys, max_value} ->
+      cond do
+        max_value == nil ->
+          {[key], value}
+
+        value > max_value ->
+          {[key], value}
+
+        value == max_value ->
+          {[key | keys], max_value}
+
+        true ->
+          {keys, max_value}
+      end
+    end)
+
+  end
+
+  def endgame(server) do
+    {:ok, pid} = get(server, "gameflow")
+    {:ok, l1} = Buck.getscores(pid, "usersonline")
+    {:ok, l2} = Buck.getscores(pid, "usersfinished")
+    if length(l1) == length(l2) do
+      true
+    else
+      false
     end
   end
 

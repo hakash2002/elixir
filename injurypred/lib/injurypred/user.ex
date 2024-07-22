@@ -11,6 +11,4 @@ defmodule Injurypred.User do
     ]
   end
 
-  def exists(pname) do
-  end
 end

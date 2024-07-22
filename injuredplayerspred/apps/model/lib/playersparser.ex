@@ -25,21 +25,17 @@ defmodule Playersparser do
     selected_no = Enum.take_random(no_players, 5)
 
     selected_players = selected_yes ++ selected_no
-    {:ok, counter} = Agent.start_link(fn -> 0 end)
+    {:ok, counter} = Agent.start_link(fn -> 1 end)
 
     Enum.map(Enum.shuffle(selected_players), fn map ->
-            s_no = Agent.get_and_update(counter, fn count -> {count, count + 1} end)
-            Map.put(map, :s_no, s_no)
+      s_no = Agent.get_and_update(counter, fn count -> {count, count + 1} end)
+      Map.put(map, :s_no, s_no)
     end)
   end
 
   def predict_score(data, picks) do
-    l = []
-
-    Enum.each(picks, fn index ->
-      if(Enum.at(data, index - 1).ruled_out == "Yes") do
-        l = l ++ [1]
-      end
-    end)
+    k = length(Enum.filter(data, fn %{player_key: _, player_name: _, ruled_out: a,s_no: s_no} -> s_no in picks and a == "Yes"  end))
+    m = [1,1,2,3,5]
+    Enum.at(m, k - 1) * 10
   end
 end

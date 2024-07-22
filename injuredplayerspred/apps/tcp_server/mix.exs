@@ -27,7 +27,7 @@ defmodule TcpServer.MixProject do
   defp deps do
     [
       {:injurypred, in_umbrella: true},
-      #{:model, in_umbrella: true}
+      {:model, in_umbrella: true}
     ]
   end
 end

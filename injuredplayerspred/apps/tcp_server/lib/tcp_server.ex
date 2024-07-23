@@ -97,7 +97,8 @@ defmodule TcpServer do
   end
 
   defp selectingplayers() do
-    data = Injury.Playersparser.select_random_value("apps/injuryprediction/lib/injury/predictions.csv")
+    data =
+      Injury.Playersparser.select_random_value("apps/injuryprediction/lib/injury/predictions.csv")
 
     {Enum.reduce(data, "", fn %{s_no: a, player_key: _, player_name: b, ruled_out: _}, acc ->
        acc <> "#{to_string(a)}, #{b} \n "

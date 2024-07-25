@@ -122,6 +122,8 @@ defmodule TcpServer do
             write_client(socket, {:error, :closed})
 
           MatchError ->
+            Injurypred.Registry.deleteuser(Injurypred.Registry, uname)
+            write_client(socket, {:ok, "You are disqualified\r\n"})
             write_client(socket, {:error, :closed})
         end
 
@@ -151,7 +153,7 @@ defmodule TcpServer do
   defp endgame(socket) do
     if Injurypred.Registry.endgame(Injurypred.Registry) do
       {val, maxscore} = Injurypred.Registry.findwinner(Injurypred.Registry)
-      winner = Enum.reduce(val, " ", fn val, acc -> " " <> acc <> val end)
+      winner = Enum.reduce(val, "", fn val, acc -> " " <> acc <> val end)
 
       if length(val) > 1 do
         write_client(

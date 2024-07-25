@@ -34,20 +34,6 @@ defmodule Injurypred.Registry do
   end
 
   @doc """
-  Put picks into bucket
-  """
-  def put(server, name, picks) do
-    GenServer.call(server, {:put, name, picks})
-  end
-
-  @doc """
-  delete bucket
-  """
-  def delete(server, name) do
-    GenServer.call(server, {:delete, name})
-  end
-
-  @doc """
   To get the score of the client
   """
   def getscores(server, name) do
@@ -75,35 +61,45 @@ defmodule Injurypred.Registry do
     end
   end
 
+  @doc """
+  Initalizes the state required for the game
+  """
   def gameflow(server) do
     case get(server, "gameflow") do
       {:ok, pid} ->
-        pid
+        {:ok, pid}
 
       :error ->
         create(server, "gameflow")
         {:ok, pid} = get(server, "gameflow")
         Buck.putscore(pid, "usersonline", [])
         Buck.putscore(pid, "usersfinished", [])
-        pid
+        {:ok, pid}
     end
   end
 
-  def finishedgame(server, name) do
-    {:ok, pid} = get(server, "gameflow")
+  @doc """
+  updates user's game status
+  """
+  def updateuserstatus(server, key, name) do
+    {:ok, pid} = gameflow(server)
 
-    case Buck.getfinishedgame(pid, name) do
-      true ->
-        Buck.updatefinishedgame(pid, "usersfinished", name)
-
+    case Buck.getuserstatus(pid, key, name) do
       false ->
-        :error
+        Buck.updateuserstatus(pid, key, name)
+
+      true ->
+        "User exists"
     end
   end
 
+  @doc """
+  Finds
+  """
   def findwinner(server) do
     {:ok, pid} = get(server, "scores")
     map = Buck.get(pid)
+
     Enum.reduce(map, {[], nil}, fn {key, value}, {keys, max_value} ->
       cond do
         max_value == nil ->
@@ -119,18 +115,23 @@ defmodule Injurypred.Registry do
           {keys, max_value}
       end
     end)
-
   end
 
   def endgame(server) do
     {:ok, pid} = get(server, "gameflow")
     {:ok, l1} = Buck.getscores(pid, "usersonline")
     {:ok, l2} = Buck.getscores(pid, "usersfinished")
+
     if length(l1) == length(l2) do
       true
     else
       false
     end
+  end
+
+  def deleteuser(server, uname) do
+    {:ok, pid} = get(server, "gameflow")
+    Buck.delete(pid, "usersonline", uname)
   end
 
   @doc """
@@ -157,30 +158,6 @@ defmodule Injurypred.Registry do
         refs = Map.put(refs, ref, name)
         :ets.insert(names, {name, pid})
         {:reply, pid, {names, refs}}
-    end
-  end
-
-  @impl true
-  def handle_call({:put, name, picks}, _from, {names, refs}) do
-    case get(names, name) do
-      {:ok, pid} ->
-        Buck.put(pid, picks)
-        {:reply, :ok, {names, refs}}
-
-      :error ->
-        {:reply, "Not found", {names, refs}}
-    end
-  end
-
-  @impl true
-  def handle_call({:delete, name}, _from, {names, refs}) do
-    case get(names, name) do
-      {:ok, _pid} ->
-        :ets.delete(names, name)
-        {:reply, :ok, {names, refs}}
-
-      :error ->
-        {:reply, "Not found", {names, refs}}
     end
   end
 

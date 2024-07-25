@@ -1,4 +1,7 @@
 defmodule Injurypred.Supervisor do
+  @moduledoc """
+  Supervise the buckets
+  """
   use Supervisor
 
   def start_link(opts) do
@@ -8,8 +11,7 @@ defmodule Injurypred.Supervisor do
   def init(:ok) do
     children = [
       {Injurypred.Registry, name: Injurypred.Registry},
-      {DynamicSupervisor, name: Injurypred.BucketSupervisor, strategy: :one_for_one},
-      {Task.Supervisor, name: Injurypred.RouterTasks},
+      {DynamicSupervisor, name: Injurypred.BucketSupervisor, strategy: :one_for_one}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)

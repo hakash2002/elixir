@@ -1,4 +1,7 @@
 defmodule TcpServer do
+  @moduledoc """
+  This is the tccp server for handling users
+  """
   require Logger
 
   def accept(port) do
@@ -28,12 +31,6 @@ defmodule TcpServer do
     valid_client(socket, uname, pass)
     write_client(socket, {:ok, "\r\n"})
     write_client(socket, {:ok, "You have to pick 2-5 players from a list of 10 players.\r\n"})
-
-    write_client(
-      socket,
-      {:ok, "Enter serial number of your picks as comma separated values\r\n"}
-    )
-
     write_client(socket, {:ok, "\r\n"})
 
     write_client(
@@ -45,34 +42,18 @@ defmodule TcpServer do
     {:ok, count} = Agent.start_link(fn -> 1 end)
     loopgame(count, uname, socket)
 
-    Injurypred.Bucket.updatefinishedgame(
-      Injurypred.Registry.gameflow(Injurypred.Registry),
-      "usersfinished",
-      uname
-    )
+    Injurypred.Registry.updateuserstatus(Injurypred.Registry, "usersfinished", uname)
 
+    write_client(socket, {:ok, "Waiting for results...\r\n"})
+    write_client(socket, {:ok, "\r\n"})
     endgame(socket)
-    {val, maxscore} = Injurypred.Registry.findwinner(Injurypred.Registry)
-    winner = Enum.reduce(val, "", fn val, acc -> " " <> acc <> val end)
-
-    if length(val) > 1 do
-      write_client(
-        socket,
-        {:ok, "The winners are#{winner} with score of #{to_string(maxscore)}\r\n"}
-      )
-    else
-      write_client(
-        socket,
-        {:ok, "The winner is#{winner} with a score of #{to_string(maxscore)}\r\n"}
-      )
-    end
   end
 
   defp write_client(socket, {:ok, data}) do
     :gen_tcp.send(socket, data)
   end
 
-  defp write_client(_socket, {:error, :closed}) do
+  defp write_client(_, {:error, :closed}) do
     exit(:shutdown)
   end
 
@@ -91,40 +72,58 @@ defmodule TcpServer do
       valid_client(socket, uname, pass)
     else
       write_client(socket, {:ok, "Welcome abroad chief!\r\n"})
-      pid = Injurypred.Registry.gameflow(Injurypred.Registry)
-      Injurypred.Bucket.updatefinishedgame(pid, "usersonline", uname)
+      Injurypred.Registry.updateuserstatus(Injurypred.Registry, "usersonline", uname)
     end
   end
 
   defp selectingplayers() do
-    data =
-      Injury.Playersparser.select_random_value("apps/injuryprediction/lib/injury/predictions.csv")
+    csv_path = Path.join(:code.priv_dir(:injuryprediction), "predictions.csv")
 
-    {Enum.reduce(data, "", fn %{s_no: a, player_key: _, player_name: b, ruled_out: _}, acc ->
-       acc <> "#{to_string(a)}, #{b} \n "
+    data =
+      Injury.Playersparser.select_random_value(csv_path)
+
+    {Enum.reduce(data, " ", fn %{s_no: a, player_key: _, player_name: b, ruled_out: _}, acc ->
+       acc <> "#{to_string(a)}| #{b} \n "
      end), data}
   end
 
   defp loopgame(count, uname, socket) do
     round_no = Agent.get_and_update(count, fn count -> {count, count + 1} end)
 
-    if round_no != 4 do
+    if round_no < 4 do
       write_client(socket, {:ok, "-------------------- \r\n"})
       write_client(socket, {:ok, "Round no: #{to_string(round_no)} \r\n"})
       write_client(socket, {:ok, "-------------------- \r\n"})
       write_client(socket, {:ok, "The players are: \r\n"})
-      write_client(socket, {:ok, "S.No, Player name\r\n"})
+      write_client(socket, {:ok, "S.No | Player name\r\n"})
       {tobewritten, datas} = selectingplayers()
       write_client(socket, {:ok, tobewritten})
+
+      write_client(
+        socket,
+        {:ok, "Enter serial number of your picks as comma separated values\r\n"}
+      )
+
       write_client(socket, {:ok, "Your 30 second timer for the game starts now\r\n "})
+      write_client(socket, {:ok, "Enter picks: "})
 
       data =
-        to_string(read_client(socket, 34000))
-        |> String.trim()
-        |> String.split(",")
-        |> Enum.map(&String.to_integer/1)
-        |> Enum.filter(fn s -> s < 11 end)
-        |> Enum.uniq()
+        try do
+          to_string(read_client(socket, 34_000))
+          |> String.trim()
+          |> String.split(",")
+          |> Enum.map(&String.to_integer/1)
+          |> Enum.filter(fn s -> s < 11 end)
+          |> Enum.uniq()
+        rescue
+          ArgumentError ->
+            Injurypred.Registry.deleteuser(Injurypred.Registry, uname)
+            write_client(socket, {:ok, "You are disqualified\r\n"})
+            write_client(socket, {:error, :closed})
+
+          MatchError ->
+            write_client(socket, {:error, :closed})
+        end
 
       dat =
         if length(data) > 5 do
@@ -135,25 +134,36 @@ defmodule TcpServer do
 
       score = Injury.Playersparser.predict_score(datas, dat)
 
-      case Injurypred.Registry.getscores(Injurypred.Registry, uname) do
-        :error ->
-          Injurypred.Registry.putscores(Injurypred.Registry, uname, score)
-
-        {:ok, val} ->
-          Injurypred.Registry.putscores(Injurypred.Registry, uname, score + val)
+      if round_no == 1 do
+        Injurypred.Registry.putscores(Injurypred.Registry, uname, score)
+      else
+        {:ok, val} = Injurypred.Registry.getscores(Injurypred.Registry, uname)
+        Injurypred.Registry.putscores(Injurypred.Registry, uname, score + val)
       end
 
       {:ok, updated_score} = Injurypred.Registry.getscores(Injurypred.Registry, uname)
+      write_client(socket, {:ok, "Your score in this round: #{to_string(score)}\r\n"})
       write_client(socket, {:ok, "Your cummulative score is: #{to_string(updated_score)}\r\n"})
-      write_client(socket, {:ok, "\r\n"})
-
       loopgame(count, uname, socket)
     end
   end
 
   defp endgame(socket) do
     if Injurypred.Registry.endgame(Injurypred.Registry) do
-      write_client(socket, {:ok, "Waiting for results...\r\n"})
+      {val, maxscore} = Injurypred.Registry.findwinner(Injurypred.Registry)
+      winner = Enum.reduce(val, " ", fn val, acc -> " " <> acc <> val end)
+
+      if length(val) > 1 do
+        write_client(
+          socket,
+          {:ok, "The winners are#{winner} with score of #{to_string(maxscore)}\r\n"}
+        )
+      else
+        write_client(
+          socket,
+          {:ok, "The winner is#{winner} with a score of #{to_string(maxscore)}\r\n"}
+        )
+      end
     else
       endgame(socket)
     end

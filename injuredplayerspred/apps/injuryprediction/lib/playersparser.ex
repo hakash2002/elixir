@@ -1,5 +1,6 @@
 defmodule Injury.Playersparser do
-  def load_data(file_path) do
+    @moduledoc false
+  defp load_data(file_path) do
     file_path
     |> File.read!()
     |> String.split("\n", trim: true)
@@ -19,8 +20,8 @@ defmodule Injury.Playersparser do
 
   def select_random_value(path) do
     data = load_data(path)
-    yes_players = Enum.filter(data, fn %{ruled_out: ruled_out} -> ruled_out == "Yes" end)
-    no_players = Enum.filter(data, fn %{ruled_out: ruled_out} -> ruled_out == "No" end)
+    yes_players = Enum.filter(data, fn %{ruled_out: ruled_out} -> ruled_out == " Yes" end)
+    no_players = Enum.filter(data, fn %{ruled_out: ruled_out} -> ruled_out == " No" end)
     selected_yes = Enum.take_random(yes_players, 5)
     selected_no = Enum.take_random(no_players, 5)
 
@@ -31,16 +32,11 @@ defmodule Injury.Playersparser do
       s_no = Agent.get_and_update(counter, fn count -> {count, count + 1} end)
       Map.put(map, :s_no, s_no)
     end)
+
   end
 
   def predict_score(data, picks) do
-    k =
-      length(
-        Enum.filter(data, fn %{player_key: _, player_name: _, ruled_out: a, s_no: s_no} ->
-          s_no in picks and a == "Yes"
-        end)
-      )
-
+    k = length(Enum.filter(data, fn %{player_key: _, player_name: _, ruled_out: a, s_no: s_no} -> s_no in picks and a == "Yes"  end))
     k * 10
   end
 end

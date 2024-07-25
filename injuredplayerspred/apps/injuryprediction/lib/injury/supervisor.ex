@@ -1,4 +1,5 @@
 defmodule Injury.Supervisor do
+  @moduledoc false
   use Supervisor
 
   def start_link(opts) do
@@ -7,9 +8,10 @@ defmodule Injury.Supervisor do
 
   @impl true
   def init(:ok) do
-    port=4321
+    port = 4321
+
     children = [
-      {Task, fn -> Injury.Injuryprediction.accept(port) end},
+      {Task, fn -> Injury.Injuryprediction.accept(port) end}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

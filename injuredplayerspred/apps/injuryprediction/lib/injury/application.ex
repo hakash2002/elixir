@@ -1,8 +1,9 @@
 defmodule Injury.Application do
+    @moduledoc false
   use Application
   def start(_type, _args) do
     children = [
-      {Injury.Supervisor,[]}
+      {Injury.Supervisor, []}
     ]
 
     opts = [strategy: :one_for_one, name: Injury.Supervisor]

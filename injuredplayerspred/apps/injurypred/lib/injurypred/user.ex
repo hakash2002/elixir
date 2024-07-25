@@ -1,7 +1,10 @@
 defmodule Injurypred.User do
+  @moduledoc """
+  User data
+  """
   defstruct name: nil, password: nil
 
-  def data() do
+  defp data() do
     [
       %Injurypred.User{name: "Neil", password: 1234},
       %Injurypred.User{name: "hakash", password: 1234},

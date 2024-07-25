@@ -1,7 +1,6 @@
 defmodule Injury.Injuryprediction do
-
+  @moduledoc false
   require Logger
-
   def accept(port) do
 
     {:ok, socket} =
@@ -22,14 +21,17 @@ defmodule Injury.Injuryprediction do
     |> read_line()
     |> write_line(socket)
 
-    serve(socket)
   end
 
   defp read_line(socket) do
-    :gen_tcp.send(socket,"The file you want to read and write the prediction\n")
-    {:ok, data} = :gen_tcp.recv(socket, 0)
-    a=Injury.Main.run("apps/injuryprediction/lib/injury/" <> data |> String.trim(), "apps/injuryprediction/lib/injury/predictions.csv")
-    a
+    :gen_tcp.send(socket, "The file you want to read and write the prediction\n")
+     data = case :gen_tcp.recv(socket, 0) do
+       {:ok, datas} ->
+        datas
+      {:error, :closed} ->
+        exit(:shutdown)
+     end
+    Injury.Main.run("apps/injuryprediction/lib/injury/" <> data |> String.trim(), "apps/injuryprediction/lib/injury/predictions.csv")
   end
 
   defp write_line(line, socket) do

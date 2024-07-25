@@ -1,4 +1,5 @@
 defmodule Injurypred do
+  @moduledoc false
   use Application
 
   @impl true
